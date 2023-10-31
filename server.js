@@ -68,5 +68,5 @@ io.on("connection", (socket) =>
 });
 
 server.listen(8081, () => {
-  console.log(`Server is spinning: -> 🍕 http://localhost:8081/`);
+  console.log(`Server is spinning: -> ⚔ http://localhost:8081/`);
 });
