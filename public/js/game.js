@@ -1,4 +1,4 @@
-const config = {
+var config = {
   type: Phaser.AUTO,
   parent: 'pvp.io',
   width: 800,
@@ -7,7 +7,7 @@ const config = {
     default: 'arcade',
     arcade: {
       debug: false,
-      gravity: { y: 0 }
+      gravity: { y: 300 }
     }
 },
   scene: {
@@ -21,9 +21,10 @@ const config = {
   
 
 
-const game = new Phaser.Game(config);
+var game = new Phaser.Game(config);
 
 let player;
+let weapone;
 let customCursor;
 let isMoving = false;
 let isFlipX = false;
@@ -39,7 +40,8 @@ function preload() {
   this.load.spritesheet('playerIdle', 'assets/player/idle.png', { frameWidth: 40, frameHeight: 40 });
   this.load.spritesheet('playerMove', 'assets/player/run.png', { frameWidth: 40, frameHeight: 40 });
   this.load.spritesheet('pistolShoot', 'assets/weapone/pistol/pistol.png', { frameWidth: 64, frameHeight: 32 });
-  this.load.spritesheet('pistolIdle', 'assets/weapone/pistol/pistolidle.png', { frameWidth: 64, frameHeight: 32 });
+  //this.load.spritesheet('pistolIdle', 'assets/weapone/pistol/pistolidle.png', { frameWidth: 64, frameHeight: 32 });
+  this.load.image('pistolIdle', 'assets/weapone/pistol/pistolidle.png');
   this.load.image('customCursor', 'assets/aim.png');
 
  
@@ -50,8 +52,9 @@ function create() {
 
   self = this;
   this.socket = io();
+  player = this.add.sprite(100, 100, 'playerIdle');
+  //player = this.physics.add.sprite(100, 100, 'playerIdle');
   document.body.style.cursor = 'none';
-
   this.customCursor = this.add.image(0, 0, 'customCursor');
   this.customCursor.setOrigin(0, 0);
   this.customCursor.setScale(0.3);
@@ -88,30 +91,11 @@ function create() {
     frameRate: 10,
     repeat: -1,
   });
-  
-  // Создайте спрайт пистолета для подбора
-  pistol = this.add.sprite(Phaser.Math.Between(100, 800), Phaser.Math.Between(100, 600), 'pistolIdle');
-  pistol.setOrigin(0.5, 0.5);
-  pistol.setDepth(0);
+
  
-    // Включите физику для игрока
-  //this.physics.world.enable(player);
-
-  // Включите физику для пистолета
-  //this.physics.world.enable(pistol);
-
-  // Установите размеры коллайдера пистолета (при необходимости)
-  //pistol.setSize(width, height);
-
-  // Добавьте коллизию между персонажем и пистолетом
-  this.physics.add.overlap(player, pistol, onPickupWeapon, null, this);
-
-   
-
-
-  // Create the player object
-  player = this.add.sprite(100, 100, 'playerIdle');
-
+  
+  
+      
 
   
 
@@ -164,12 +148,21 @@ function create() {
       }
     });
   });
+  this.socket.on('weaponeLocation', function (weaponeLocation) {
+    if (self.weapone) self.weapone.destroy();
+    self.weapone = self.add.image(Phaser.Math.Between(100, 800), Phaser.Math.Between(100, 600), 'pistolIdle');
+    self.weapone.setOrigin(0.5, 0.5);
+    self.weapone.setDepth(0);
+    self.physics.add.overlap(self.player, self.weapon, function () {
+      this.socket.emit('weaponeTakes');
+    }, null, self);
+  });
 
   
 }
 
 function calculateFlipX(player, cursor) {
-  const angle = Phaser.Math.Angle.Between(player.x, player.y, cursor.x, cursor.y);
+  var angle = Phaser.Math.Angle.Between(player.x, player.y, cursor.x, cursor.y);
   return angle > Math.PI / 2 || angle < -Math.PI / 2;
 }
 
@@ -183,15 +176,19 @@ function update() {
     
   }
 
-  const x = player.x;
-  const y = player.y;
+  var x = player.x;
+  var y = player.y;
+
+ /* var weaponeX = weapone.y;
+  var weaponeY = weapone.y;*/
+
   
 
   player.setFlipX(calculateFlipX(player, self.customCursor));
-
+  //this.socket.emit('weaponeCoords', { weaponeX: this.weapone.x, weaponeY: this.weapone.y, rotation: this.weapone.rotation });
   // Проверьте, если клавиша "E" нажата, и если да, то выполните подбор оружия
   if (Phaser.Input.Keyboard.JustDown(self.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E))) {
-    //onPickupWeapon();
+    onPickupWeapon(player, pistol)
   }
    
 }
@@ -242,6 +239,15 @@ function move() {
     flipX: isFlipX, 
     animationKey: animationKey, 
   });
+
+  /*self.socket.emit('weaponeCoords', {
+    weaponeX: weapone.x,
+    weaponeY: weapone.y,
+  
+  });*/
+
+
+  
    // save old position data
    player.oldPosition = {
      x: player.x,
@@ -254,7 +260,7 @@ function move() {
 
 function onPickupWeapon(player, weapon) {
   
-  
+  console.log(player + "pickUp" + weapon);
 }
 
 

@@ -4,7 +4,12 @@ const server = require("http").Server(app);
 const io = require("socket.io")(server);
 const path = require("path");
 
+
 var players = {};
+var weapone = {
+  x: Math.floor(Math.random() * 700) + 50,
+  y: Math.floor(Math.random() * 500) + 50
+};
 
 app.use(express.static(__dirname + "/public"));
 
@@ -31,6 +36,8 @@ io.on("connection", (socket) =>
 
   // Отправить информацию о существующих игроках новому игроку
   socket.emit("currentPlayers", players);
+  // send the star object to the new player
+  socket.emit('weaponeLocation', weapone);
   // Отправить информацию о новом игроке другим игрокам
   socket.broadcast.emit("newPlayer", players[socket.id]);
 
@@ -65,6 +72,15 @@ io.on("connection", (socket) =>
   socket.on("newPlayer", () => {
     socket.emit("currentPlayers", players);
   });
+  socket.on('weaponeCoords', (CoordData) => {
+   
+    weapone.x = CoordData.x;
+    weapone.y = CoordData.y;
+    
+    io.emit('weaponeLocation', weapone);
+
+  });
+
 });
 
 server.listen(8081, () => {
