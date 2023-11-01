@@ -44,7 +44,8 @@ function preload() {
   this.load.image('pistolIdle', 'assets/weapone/pistol/pistolidle.png');
   this.load.image('customCursor', 'assets/aim.png');
 
- 
+   
+  
 }
 
 function create() {
