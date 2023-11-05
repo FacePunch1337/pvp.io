@@ -21,7 +21,21 @@ var config = {
   
 
 
-var game = new Phaser.Game(config);
+
+
+const game = new Phaser.Game(config);
+
+// == Natural session check. == 
+function Correctness()
+{
+  if(sessionStorage.getItem('in_session') === 'true')
+    console.log("Access is allowed")
+  else
+    window.location.href = "/";
+}
+
+Correctness();
+// == 
 
 let player;
 let weapone;

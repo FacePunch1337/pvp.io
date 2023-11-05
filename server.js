@@ -25,6 +25,10 @@ io.on("connection", (socket) =>
 {
   console.log("Пользователь подключился: ", socket.id);
 
+  const socketData = { player_id: socket.id };
+  
+  socket.socketData = socketData;
+
   players[socket.id] = {
     rotation: 0,
     x: Math.floor(Math.random() * 700) + 50,  
@@ -46,6 +50,15 @@ io.on("connection", (socket) =>
     delete players[socket.id];
     io.emit("disconnect", socket.id);
   });
+
+  // == Chat container. ==
+  socket.on("chatMessage", (message) => 
+  {
+    console.log(`📧 MESSAGE SEND CONFIRMED: ${JSON.stringify(message)}`);
+
+    socket.broadcast.emit("chatMessage", message);
+  });
+  // ==
 
   socket.on("playerMovement", (movementData) => {
     players[socket.id].x = movementData.x;
