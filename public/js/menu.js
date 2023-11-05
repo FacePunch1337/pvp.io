@@ -38,15 +38,15 @@ function sendMessage()
         return;
     if(!InputValidityData(nickname))
     {
-<<<<<<< HEAD
+
         // Леша выведи сообщение об ошибке в html.
 
         //ахахахха чё за тупорылый способ вести общение? - Стас
         // И скинь фотку писюна
-=======
+
         error_element.innerHTML = "To send a message, enter your nickname!";
         return;
->>>>>>> b61e00a137658b9e746c0ad34984fbfc3dad92df
+
     }
 
     socket.emit("chatMessage", { user: nickname, text: message_text });
@@ -62,10 +62,10 @@ socket.on("chatMessage", (message) =>
     ConstructMessage("received-message", message);
 });
 
-<<<<<<< HEAD
+
 function GenerateClientId() { return Math.random().toString(36).substring(2, 10); }
 
-=======
+
 function ConstructMessage(is, message)
 {
     switch(is)
@@ -118,4 +118,4 @@ function ConstructMessage(is, message)
 
 }
 // ==
->>>>>>> b61e00a137658b9e746c0ad34984fbfc3dad92df
+
