@@ -30,6 +30,7 @@ function toggleChat()
 function sendMessage() 
 {
     var nickname = document.getElementById("input").value;
+
     var message_input = document.getElementById("message");
     const error_element = document.getElementById("error-input");
     var message_text = message_input.value;
@@ -37,15 +38,30 @@ function sendMessage()
     if (message_text.trim() === "") 
         return;
     if(!InputValidityData(nickname))
+
+
+    if(InputValidityData(nickname))
+    {
+        sessionStorage.setItem('gamer_data', 'true')
+        
+        console.log(sessionStorage.getItem('gamer_data'));
+        
+        window.location.href = "/game";
+    }
+    else
+
     {
 
         // Леша выведи сообщение об ошибке в html.
+
 
         //ахахахха чё за тупорылый способ вести общение? - Стас
         // И скинь фотку писюна
 
         error_element.innerHTML = "To send a message, enter your nickname!";
         return;
+
+        // И скинь фотку писюна
 
     }
 
@@ -59,6 +75,7 @@ function sendMessage()
 
 socket.on("chatMessage", (message) => 
 {
+
     ConstructMessage("received-message", message);
 });
 
@@ -116,6 +133,10 @@ function ConstructMessage(is, message)
         }
     }
 
+
+
+
+    var regex = /^[A-Za-z0-9]{1,15}$/;
+    return regex.test(nick);
 }
-// ==
 

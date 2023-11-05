@@ -46,7 +46,7 @@ let idleAnim;
 let moveAnim;
 let pistol = null;
 let pistolAnim;
-let speed = 2;
+let speed = 2.5;
 let self;
 
 
@@ -67,18 +67,45 @@ function create() {
 
   self = this;
   this.socket = io();
-  player = this.add.sprite(100, 100, 'playerIdle');
+  player = this.add.sprite(800, 600, 'playerIdle');
   //player = this.physics.add.sprite(100, 100, 'playerIdle');
   document.body.style.cursor = 'none';
-  this.customCursor = this.add.image(0, 0, 'customCursor');
+  this.customCursor = this.add.sprite(800, 700, 'customCursor');
   this.customCursor.setOrigin(0, 0);
   this.customCursor.setScale(0.3);
   this.customCursor.setDepth(1);
 
-  this.input.on('pointermove', (pointer) => {
-    self.customCursor.x = pointer.x;
-    self.customCursor.y = pointer.y;
-  });
+  // Locks pointer on mousedown
+  game.canvas.addEventListener('mousedown', () => {
+    game.input.mouse.requestPointerLock();
+});
+ 
+  this.input.on(
+    'pointermove',
+    function (pointer)
+    {
+        if (this.input.mouse.locked)
+        {
+            // Move reticle with mouse
+            this.customCursor.x += pointer.movementX;
+            this.customCursor.y += pointer.movementY;
+
+            // Only works when camera follows player
+            const distX = this.customCursor.x - player.x;
+            const distY = this.customCursor.y - player.y;
+
+            // Ensures reticle cannot be moved offscreen
+            if (distX > 800) { this.customCursor.x = player.x + 800; }
+            else if (distX < -800) { this.customCursor.x = player.x - 800; }
+
+            if (distY > 600) { this.customCursor.y = player.y + 600; }
+            else if (distY < -600) { this.customCursor.y = player.y - 600; }
+        }
+    },
+    this
+);
+
+  
 
   this.idleAnim = this.anims.create({
     key: 'idle',
@@ -172,14 +199,45 @@ function create() {
       this.socket.emit('weaponeTakes');
     }, null, self);
   });
-
   
+  
+}
+
+function constrainReticle (customCursor, radius)
+{
+    const distX = customCursor.x - player.x; // X distance between player & reticle
+    const distY = customCursor.y - player.y; // Y distance between player & reticle
+
+    // Ensures reticle cannot be moved offscreen
+    if (distX > 800) { reticle.x = player.x + 800; }
+    else if (distX < -800) { reticle.x = player.x - 800; }
+
+    if (distY > 600) { reticle.y = player.y + 600; }
+    else if (distY < -600) { reticle.y = player.y - 600; }
+
+    // Ensures reticle cannot be moved further than dist(radius) from player
+    const distBetween = Phaser.Math.Distance.Between(
+        player.x,
+        player.y,
+        customCursor.x,
+        customCursor.y
+    );
+    if (distBetween > radius)
+    {
+        // Place reticle on perimeter of circle on line intersecting player & reticle
+        const scale = distBetween / radius;
+
+        customCursor.x = player.x + (customCursor.x - player.x) / scale;
+        customCursor.y = player.y + (customCursor.y - player.y) / scale;
+    }
 }
 
 function calculateFlipX(player, cursor) {
   var angle = Phaser.Math.Angle.Between(player.x, player.y, cursor.x, cursor.y);
   return angle > Math.PI / 2 || angle < -Math.PI / 2;
 }
+
+
 
 function update() {
   move();
@@ -194,10 +252,25 @@ function update() {
   var x = player.x;
   var y = player.y;
 
- /* var weaponeX = weapone.y;
-  var weaponeY = weapone.y;*/
+  const targetX = self.customCursor.x;
+  const targetY = self.customCursor.y;
 
-  
+// Задаем плавное перемещение камеры к прицелу
+const cameraSpeed = 0.1;
+const camX = this.cameras.main.scrollX;
+const camY = this.cameras.main.scrollY;
+const newCamX = camX + (targetX - game.config.width / 2 - camX) * cameraSpeed;
+const newCamY = camY + (targetY - game.config.height / 2 - camY) * cameraSpeed;
+
+// Устанавливаем новую позицию камеры
+this.cameras.main.scrollX = newCamX;
+this.cameras.main.scrollY = newCamY;
+
+
+
+
+    // Constrain position of reticle
+  constrainReticle(this.customCursor, 400);
 
   player.setFlipX(calculateFlipX(player, self.customCursor));
   //this.socket.emit('weaponeCoords', { weaponeX: this.weapone.x, weaponeY: this.weapone.y, rotation: this.weapone.rotation });
@@ -246,6 +319,7 @@ function move() {
 
   player.x += dx * moveSpeed;
   player.y += dy * moveSpeed;
+  
 
   self.socket.emit('playerMovement', {
     x: player.x,
@@ -272,6 +346,9 @@ function move() {
   
   
 }
+
+
+
 
 function onPickupWeapon(player, weapon) {
   
