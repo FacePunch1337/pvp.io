@@ -37,7 +37,7 @@ io.on("connection", (socket) =>
     isMoving: false, // Добавляем информацию о состоянии движения
     flipX: false, // Добавляем информацию о flipX
   };
-
+  
   // Отправить информацию о существующих игроках новому игроку
   socket.emit("currentPlayers", players);
   // send the star object to the new player

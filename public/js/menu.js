@@ -8,7 +8,9 @@ function SaveGamerSession()
   if (InputValidityData(nickname)) 
   {
     sessionStorage.setItem("in_session", "true");
+    
     window.location.href = "/game";
+    
   }
   else
     errorElement.innerHTML = "Invalid input data";
@@ -61,7 +63,7 @@ function sendMessage()
         error_element.innerHTML = "To send a message, enter your nickname!";
         return;
 
-        // И скинь фотку писюна
+        
 
     }
 
