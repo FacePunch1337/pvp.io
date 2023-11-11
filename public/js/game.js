@@ -1,7 +1,7 @@
 var config = {
   type: Phaser.AUTO,
-  width: 1920,
-  height: 1080,
+  width: 800,
+  height: 600,
   physics: {
     default: 'arcade',
     arcade: {
@@ -37,14 +37,12 @@ Correctness();
 // == 
 
 let player;
-let weapone;
+//let weapon = null;
 let customCursor;
 let isMoving = false;
 let isFlipX = false;
 let idleAnim;
 let moveAnim;
-let pistol = null;
-let pistolAnim;
 let speed = 2.5;
 let self;
 let isBulletFired = false;
@@ -52,10 +50,11 @@ let isBulletFired = false;
 let bullets;
 let bulletSpeed = 1000;
 let maxBulletDistance = 1000; // Максимальное расстояние, которое может пролететь пуля
-
+let playerWeaponId = null; 
+let playerWeapon = null;
 //let bulletGroup;
-
-
+//let weaponsGroup; // Declare the weaponsGroup variable
+let playerWeapons = []; // Создайте массив для хранения оружия
 function preload() {
   this.load.spritesheet('playerIdle', 'assets/player/idle.png', { frameWidth: 40, frameHeight: 40 });
   this.load.spritesheet('playerMove', 'assets/player/run.png', { frameWidth: 40, frameHeight: 40 });
@@ -80,29 +79,11 @@ function create() {
   player.setOrigin(0, 0);
   player.setDepth(0.3);
   player.setDepth(1);
-  pistol = this.physics.add.sprite(player.x, player.y, 'pistolSprite');
-  pistol.setOrigin(0, 0);
-  pistol.setDepth(0.3);
-  pistol.setDepth(0);
 
-  pistol.x = 0; // Смещение пистолета относительно персонажа по горизонтали
-  pistol.y = 0; // Смещение пистолета относительно персонажа по вертикали
-
+ 
 
   this.load.image('bullet', 'assets/weapone/bullet.png');
-// В функции create
-bullets = this.physics.add.group({
-  classType: Phaser.Physics.Arcade.Image,
-  maxSize: 50,
-  key: 'bullet',
-  active: false,
-  visible: false,
-});
-  /*bulletGroup = this.physics.add.group({
-    classType: Phaser.Physics.Arcade.Image,
-    maxSize: 50, // Максимальное количество пуль
-    key: 'bulletSprite', // Изображение пули
-  });*/
+
 
   document.body.style.cursor = 'none';
   this.customCursor = this.add.sprite(800, 700, 'customCursor');
@@ -140,32 +121,10 @@ bullets = this.physics.add.group({
     this
 );
 
-/*this.input.on('pointerdown', function (pointer) {
-  if (pointer.leftButtonDown() && player.pistol) {
-    // Здесь вызовите анимацию pistol_shoot
-    pistol.play('pistol_shoot', true);
-    // Добавьте здесь логику для стрельбы
-    // Создайте пулю и установите ей скорость в направлении указателя мыши
-    // Например:
-    shoot();
-    
-  }
-  else if(!pointer.leftButtonDown()){
-    pistol.play('pistol_idle', true);
-  }
-  
-  
-  
-  
-});*/
 
-this.input.keyboard.on('keydown-Q', throwWeapon, this);
 
-this.physics.add.overlap(player, pistol, function () {
-  if (Phaser.Input.Keyboard.JustDown(self.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E))) {
-    onPickupWeapon(player, pistol);
-  }
-});
+ 
+ 
 
   this.idleAnim = this.anims.create({
     key: 'idle',
@@ -203,6 +162,7 @@ this.physics.add.overlap(player, pistol, function () {
   
 
   this.otherPlayers = this.add.group();
+  this.weaponsGroup = this.add.group();
   this.socket.on('currentPlayers', function (players) {
     Object.keys(players).forEach(function (id) {
       if (players[id].playerId === self.socket.id) {
@@ -251,16 +211,92 @@ this.physics.add.overlap(player, pistol, function () {
       }
     });
   });
+
+  
+// Позже, при создании оружия на клиенте, используйте его уникальный идентификатор
+this.socket.on("newWeapon", function (newWeapon) {
+  createWeapon(self, newWeapon.x, newWeapon.y, newWeapon.id);
+  
+});
+
+// Задаем обработчик события "availableWeapons"
+this.socket.on("availableWeapons", function (availableWeapons) {
+  // Создаем оружие для каждого доступного на сервере
+  availableWeapons.forEach((weapon) => {
+    createWeapon(self, weapon.x, weapon.y, weapon.id);
+  });
+}); 
+
+this.socket.on("weaponPickedUp", function (weaponId, playerId) {
  
+ 
+  console.log(`Игрок ${playerId} подобрал оружие с ID ${weaponId}`);
   
+  if (playerId === self.socket.id) {
+    console.log(`Игрок ${playerId} это мы`);
+    playerWeaponId = weaponId;
+    playerWeapon = playerWeapons.find((weapon) => weapon.id === weaponId);
+    playerWeapon.isPickedUp = true;
+   
+  }
   
+});
+
+this.socket.on('playerMoved', function (playerInfo) {
+  self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+    if (playerInfo.playerId === otherPlayer.playerId) {
+      otherPlayer.setRotation(playerInfo.rotation);
+      otherPlayer.setPosition(playerInfo.x, playerInfo.y);
+    }
+  });
+});
+
+this.socket.on("weaponUpdate", function (weaponData) {
+  self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+    self.weaponsGroup.getChildren().forEach(function (playerWeapon) {
+      if (weaponData.playerId === otherPlayer.playerId) {
+        
+          armed(playerWeapon); // Вызываем функцию armed только для оружия игрока
+        
+      }
+    });
+  });
+});
+   
+  
+
+//});
+ 
+
+
+    //currentWeapon.setFlipX(data.weaponFlipX);
+    //console.log(`id: ${currentWeapon.id} x: ${currentWeapon.x}, y: ${currentWeapon.y} rot: ${currentWeapon.rotation}`);
+  
+
+//});
+ 
+    // В вашем коде на клиенте
+this.physics.add.overlap(player, this.weaponsGroup, (player, weapon) => {
+  if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E))) {
+    // Отправить серверу запрос на подбор оружия
+    onPickupWeapon(player, weapon);
+    this.socket.emit("pickupWeapon", weapon.id);
+  }
+});
+
+// В вашем коде на клиенте
+
+  
+
+
+
 }
 
 
-
-
 function update() {
+  
   move();
+
   if (isMoving) {
     player.play('move', true);
     
@@ -271,7 +307,7 @@ function update() {
 
   var x = player.x;
   var y = player.y;
-
+  // Возьмите первое оружие из массива (вы можете настроить логику выбора)
   const targetX = self.customCursor.x;
   const targetY = self.customCursor.y;
 
@@ -292,75 +328,79 @@ this.cameras.main.scrollY = newCamY;
     // Constrain position of reticle
   constrainReticle(this.customCursor, 400);
 
- 
 
-  //player.setFlipX(calculateFlipX(player, self.customCursor));
-  //this.socket.emit('weaponeCoords', { weaponeX: this.weapone.x, weaponeY: this.weapone.y, rotation: this.weapone.rotation });
-  // Проверьте, если клавиша "E" нажата, и если да, то выполните подбор оружия
-
-  if (player.pistol) {
-  // Calculate the angle between the player and the cursor
-  const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
-
-  const pistolOffsetX = isFlipX ? 10 : 30; // Смещение пистолета в зависимости от отзеркаливания
-  const pistolOffsetY = 15; // Смещение пистолета относительно персонажа по вертикали
-
-  pistol.x = player.x + pistolOffsetX;
-  pistol.y = player.y + pistolOffsetY;
- 
-  // Flip the player and the pistol based on the player's direction
-  pistol.setFlipX(calculateFlipX(player, self.customCursor));
-
-  // Установите угол вращения оружия
-  if (isFlipX) {
-    pistol.setRotation(Math.PI + angleToCursor); // 180 градусов
-    pistol.setOrigin(1, 0.5); // Переместите pivot в правую сторону
-  } else {
-    pistol.setRotation(angleToCursor); // Нет вращения
-    pistol.setOrigin(0, 0.5); // Верните pivot в исходное положение
-  }
-
-    /*const bullet = this.physics.add.image(player.x, player.y, 'bulletSprite');
-    const speed = 1000;
-    this.physics.velocityFromRotation(angleToCursor, speed, bullet.body.velocity);*/
+  // Проверьте, есть ли какое-либо оружие в руках игрока
   
- }
+    
+    
+  if (playerWeapon) {
 
- this.input.on('pointerdown', function (pointer) {
-  if (pointer.leftButtonDown() && player.pistol) {
-    // Запускаем анимацию стрельбы
-    pistol.play('pistol_shoot', true);
-    // Вызываем метод shoot
-    shoot();
-  } else if (!pointer.leftButtonDown()) {
-    // Воспроизводим анимацию пистолета в руке игрока в состоянии покоя
-    pistol.play('pistol_idle', true);
+
+    armed(playerWeapon);
+    this.input.on('pointerdown', function (pointer) {
+      if (pointer.leftButtonDown() && playerWeapons.length > 0) {
+        // Запускаем анимацию стрельбы
+        playerWeapon.play('pistol_shoot', true);
+        // Вызываем метод shoot
+        shoot(playerWeapon);
+      } else if (!pointer.leftButtonDown()) {
+        // Воспроизводим анимацию пистолета в руке игрока в состоянии покоя
+        playerWeapon.play('pistol_idle', true);
+      }
+
+    
+    });
+
   }
-});
 
- player.setFlipX(calculateFlipX(player, self.customCursor));
+  
+  player.setFlipX(calculateFlipX(player, self.customCursor));
+   
 
- if (!self.input.activePointer.leftButtonDown()) {
-  pistol.play('pistol_idle', true);
 }
 
-
-/*bulletGroup.getChildren().forEach((bullet) => {
-  // Проверьте, находится ли пуля за пределами экрана
-  if (bullet.x < 0 || bullet.x > game.config.width || bullet.y < 0 || bullet.y > game.config.height) {
-    bulletGroup.killAndHide(bullet); // Отключите и скройте пулю
-  }
-});
-
-// Удалите пули, находящиеся на большом расстоянии от игрока
-bulletGroup.getChildren().forEach((bullet) => {
-  const distanceToPlayer = Phaser.Math.Distance.Between(player.x, player.y, bullet.x, bullet.y);
-  if (distanceToPlayer > 2000) {
-    bulletGroup.killAndHide(bullet); // Отключите и скройте пулю
-  }
-});*/
-}
  
+   
+function armed(weapon){
+  weapon = playerWeapons[0];
+    const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
+
+    const pistolOffsetX = isFlipX ? 10 : 30; // Смещение пистолета в зависимости от отзеркаливания
+    const pistolOffsetY = 15; // Смещение пистолета относительно персонажа по вертикали
+  
+    
+    weapon.x = player.x + pistolOffsetX;
+    weapon.y = player.y + pistolOffsetY;
+   
+    // Flip the player and the pistol based on the player's direction
+    weapon.setFlipX(calculateFlipX(player, self.customCursor));
+  
+  
+  
+     // угол вращения оружия
+     if (isFlipX) {
+      weapon.setRotation(Math.PI + angleToCursor); // 180 градусов
+      weapon.setOrigin(1, 0.5); //pivot в правую сторону
+    } else {
+      weapon.setRotation(angleToCursor); // Нет вращения
+      weapon.setOrigin(0, 0.5); // spivot в исходное положение
+    }
+ 
+   // Emit the "weaponUpdates" event to all clients
+   self.socket.emit("weaponUpdates", {
+     playerId: player.id,
+     weaponId: weapon.id,
+     playerX: player.x,
+     playerY: player.y,
+     weaponX: weapon.x,
+     weaponY: weapon.y,
+     weaponRotation: weapon.rotation,
+     
+
+   });
+    
+}
+  
    
 
 
@@ -412,15 +452,6 @@ function move() {
     animationKey: animationKey, 
   });
 
-  /*self.socket.emit('weaponeCoords', {
-    weaponeX: weapone.x,
-    weaponeY: weapone.y,
-  
-  });*/
-
-
-  
-   // save old position data
    player.oldPosition = {
      x: player.x,
      y: player.y,
@@ -464,13 +495,12 @@ function calculateFlipX(obj, cursor) {
   return angle > Math.PI / 2 || angle < -Math.PI / 2;
 }
 
-function shoot() {
- 
+function shoot(playerWeapon) {
   // Calculate the angle between the player and the cursor
   const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
 
   // Создаем пулю
-  const bullet = self.physics.add.image(pistol.x, pistol.y, 'bullet');
+  const bullet = self.physics.add.image(playerWeapon.x, playerWeapon.y, 'bullet');
   const bulletSpeed = 2000;
   self.physics.velocityFromRotation(angleToCursor, bulletSpeed, bullet.body.velocity);
 
@@ -482,58 +512,35 @@ function shoot() {
   self.time.delayedCall(1000, () => {
     bullet.destroy();
   });
+}
   
 
+
+
+function createWeapon(self, x, y, weaponId) {
+  const weapon = self.physics.add.sprite(x, y, 'pistolIdle');
+  weapon.setOrigin(0, 0); //  pivot в исходное положение
+  weapon.id = weaponId; // уникальный идентификатор оружия
+  self.weaponsGroup.add(weapon); // Добавляем оружие в группу
+  console.log(`spawn weapon id = ${weaponId}`);
+
+ 
+  return weapon;
 }
-function throwWeapon() {
-  if (event.code === 'KeyQ' && player.pistol) {
-    // Получите текущее положение игрока и прицела
-    const playerX = player.x;
-    const playerY = player.y;
-    const cursorX = self.customCursor.x;
-    const cursorY = self.customCursor.y;
 
-    // Вычислите направление броска оружия
-    const directionX = cursorX - playerX;
-    const directionY = cursorY - playerY;
 
-    // Создайте новый экземпляр оружия (возможно, вам понадобится анимацию броска)
-    const thrownWeapon = this.physics.add.sprite(playerX, playerY, 'pistolIdle');
 
-    // Установите скорость броска оружия
-    const throwSpeed = 400;
-
-    // Нормализуйте направление броска и установите его скорость
-    const length = Math.sqrt(directionX * directionX + directionY * directionY);
-    const velocityX = (directionX / length) * throwSpeed;
-    const velocityY = (directionY / length) * throwSpeed;
-
-    // Установите скорость броска для оружия
-    thrownWeapon.setVelocity(velocityX, velocityY);
-
-    // Удалите оружие из руки игрока
-    player.pistol = null;
-
-    // Удалите оружие из сцены через определенное время (например, 2 секунды)
-    this.time.delayedCall(2000, () => {
-      thrownWeapon.destroy();
-    });
-  }
-}
 
 function onPickupWeapon(player, weapon) {
-  
-  pistol = weapon;
-  pistol.setDepth(2)
-  pistol.x = player.x; // Установите пистолет в руках игрока
-  pistol.y = player.y; // Установите пистолет в руках игрока
-  player.pistol = pistol; // Присвойте пистолет игроку для последующей работы с ним
-}
-
-
-function addPistol(self) {
-  self.pistol = this.add.sprite(100, 100, 'pistolSprite');
-  
+  if (!player.weapon) {
+    player.weapon = weapon;
+    weapon.setDepth(2);
+    weapon.x = player.x;
+    weapon.y = player.y;
+    weapon.isPickedUp = true;
+    playerWeapons.push(weapon);
+    self.socket.emit("pickupWeapon", weapon.id, self.socket.id);
+  }
 }
 
 function addPlayer(self, playerInfo) {
@@ -548,7 +555,8 @@ function addOtherPlayers(self, playerInfo) {
   if (!existingPlayer) {
     const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
     otherPlayer.playerId = playerInfo.playerId;
+    otherPlayer.setOrigin(0, 0); 
+    otherPlayer.setDepth(0); // Установите origin для нового игрока
     self.otherPlayers.add(otherPlayer);
-    
   }
 }
