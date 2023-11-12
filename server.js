@@ -67,7 +67,7 @@
       });
     });
 
-    socket.on("updateCurrentWeapon", (weaponId) => {
+    /*socket.on("updateCurrentWeapon", (weaponId) => {
       // Обновите информацию о текущем оружии игрока
       players[socket.id].currentWeapon = weaponId;
       
@@ -76,46 +76,32 @@
         playerId: socket.id,
         weaponId: weaponId,
       });
-    });
+    });*/
 
     socket.on("pickupWeapon", (weaponId, playerId) => {
-      // Здесь вы можете выполнить логику для подбора оружия, используя weaponId
-      // Например, вы можете удалить оружие с сервера и отправить уведомления другим игрокам
-    // Найдите оружие, которое игрок подбирает
- 
-      playerId = socket.id;
       
-    // weapons[weaponId].x = playerId.x;
-      //weapons[weaponId].x = playerId.x;
-      // Вывести сообщение в консоль
+      playerId = socket.id;
       console.log(`Игрок ${playerId} подобрал оружие с ID ${weaponId}`);
       
-        // Возможно, у вас также есть логика для скрытия оружия у других игроков
-    
-      // Другая логика подбора оружия
-    
-      // Отправить уведомление о подборе оружия всем подключенным клиентам
-      io.emit("weaponPickedUp",  weaponId, playerId, );
-    
-      // Дополнительная логика подбора оружия
-    });
-    
-    socket.on("removeWeapon", (weaponId) => {
-      const weaponIndex = weapons.findIndex((weapon) => weapon.id === weaponId);
-      if (weaponIndex !== -1) {
-        weapons.splice(weaponIndex, 1);
-        io.emit("removeWeapon", weaponId);
+      const weapon = weapons.find((w) => w.id === weaponId);
+      if (weapon) {
+        weapon.isPickedUp = true;
+        io.emit("weaponPickedUp", weaponId, socket.id);
       }
     });
+    
 
     socket.on("weaponUpdates", (weaponData) => {
-      weaponData.playerId = socket.id;
-      
-      console.log(`Игрок ${weaponData.playerId} подобрал оружие ${weaponData.weaponId}.`);
       io.emit("weaponUpdate", weaponData);
     });
+
+    socket.on("bulletUpdates", (bulletData) => {
+     
+      io.emit("bulletUpdate", bulletData);
+       });
   });
 
+   
   function spawnRandomWeapon() {
     const x = Math.floor(Math.random() * 700) + 50;
     const y = Math.floor(Math.random() * 500) + 50;

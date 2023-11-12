@@ -37,6 +37,7 @@ Correctness();
 // == 
 
 let player;
+let hasWeapon = false;
 //let weapon = null;
 let customCursor;
 let isMoving = false;
@@ -47,14 +48,15 @@ let speed = 2.5;
 let self;
 let isBulletFired = false;
 
-let bullets;
+let bullets = [];
 let bulletSpeed = 1000;
+let maxBullets = 10; // Максимальное количество пуль в пуле
 let maxBulletDistance = 1000; // Максимальное расстояние, которое может пролететь пуля
 let playerWeaponId = null; 
 let playerWeapon = null;
-//let bulletGroup;
-//let weaponsGroup; // Declare the weaponsGroup variable
-let playerWeapons = []; // Создайте массив для хранения оружия
+let playerWeapons = []; // Создайте массив для хранения оружи
+
+
 function preload() {
   this.load.spritesheet('playerIdle', 'assets/player/idle.png', { frameWidth: 40, frameHeight: 40 });
   this.load.spritesheet('playerMove', 'assets/player/run.png', { frameWidth: 40, frameHeight: 40 });
@@ -179,11 +181,17 @@ function create() {
     addOtherPlayers(self, playerInfo);
   });
   this.socket.on('disconnect', function (playerId) {
-    self.otherPlayers.getChildren().forEach(function (otherPlayer) {
-      if (playerId === otherPlayer.playerId) {
-        otherPlayer.destroy();
-      }
-    });
+    if (playerId === self.socket.id) {
+      // Игрок переподключился, очищаем его оружие
+      hasWeapon = false;
+      
+    } else {
+      self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+        if (playerId === otherPlayer.playerId) {
+          otherPlayer.destroy();
+        }
+      });
+    }
   });
   this.socket.on('playerMoved', function (playerInfo) {
     self.otherPlayers.getChildren().forEach(function (otherPlayer) {
@@ -215,7 +223,7 @@ function create() {
   
 // Позже, при создании оружия на клиенте, используйте его уникальный идентификатор
 this.socket.on("newWeapon", function (newWeapon) {
-  createWeapon(self, newWeapon.x, newWeapon.y, newWeapon.id);
+  createWeapon(self, newWeapon.x, newWeapon.y, newWeapon.id);  
   
 });
 
@@ -223,7 +231,11 @@ this.socket.on("newWeapon", function (newWeapon) {
 this.socket.on("availableWeapons", function (availableWeapons) {
   // Создаем оружие для каждого доступного на сервере
   availableWeapons.forEach((weapon) => {
-    createWeapon(self, weapon.x, weapon.y, weapon.id);
+    // Проверьте, не создано ли уже оружие у игрока
+    const existingWeapon = playerWeapons.find((w) => w.id === weapon.id);
+    if (!existingWeapon) {
+      createWeapon(self, weapon.x, weapon.y, weapon.id);
+    }
   });
 }); 
 
@@ -251,40 +263,73 @@ this.socket.on('playerMoved', function (playerInfo) {
   });
 });
 
-this.socket.on("weaponUpdate", function (weaponData) {
+this.socket.on('weaponUpdate', function (weaponData) {
   self.otherPlayers.getChildren().forEach(function (otherPlayer) {
     self.weaponsGroup.getChildren().forEach(function (playerWeapon) {
-      if (weaponData.playerId === otherPlayer.playerId) {
-        
-          armed(playerWeapon); // Вызываем функцию armed только для оружия игрока
-        
+      if (weaponData.weaponId === playerWeapon.id) {
+        const pistolOffsetX = weaponData.weaponFlipX ? 10 : 30;
+        const pistolOffsetY = 15;
+        const weaponX = weaponData.playerX + pistolOffsetX;
+        const weaponY = weaponData.playerY + pistolOffsetY;
+
+        // Проверка, что это не локальный игрок
+        if (otherPlayer.playerId !== self.socket.id) {
+          playerWeapon.weaponX = weaponX;
+          playerWeapon.weaponY = weaponY;
+          playerWeapon.setFlipX(calculateFlipX(weaponData.chel, weaponData.cursor));
+          playerWeapon.setPosition(weaponX, weaponY);
+          console.log("suka");
+          // угол вращения оружия
+          if (weaponData.weaponFlipX) {
+            playerWeapon.setRotation(Math.PI + weaponData.angle);
+            playerWeapon.setOrigin(1, 0.5);
+          } else {
+            playerWeapon.setRotation(weaponData.angle);
+            playerWeapon.setOrigin(0, 0.5);
+          }
+        }
       }
+   
+    });
+  });
+});
+
+this.socket.on('bulletUpdate', function (bulletData) {
+  self.otherPlayers.getChildren().forEach(function (otherPlayer) {
+    self.weaponsGroup.getChildren().forEach(function (playerWeapon) {
+      if (bulletData.weaponId === playerWeapon.id) {
+       
+   
+    const bullet = self.physics.add.image(bulletData.playerWeaponX, bulletData.playerWeaponY, 'bullet');
+  
+    self.physics.velocityFromRotation(bulletData.angle, bulletData.bulletSpeed, bullet.body.velocity);
+
+    bullet.setRotation(bulletData.angle);
+    bullet.setActive(true);
+    bullet.setVisible(true);
+
+  // Установите таймер на удаление пули через 3 секунды
+     self.time.delayedCall(1000, () => {
+      bullet.destroy();
+      });
+
+    }
+   
     });
   });
 });
    
   
 
-//});
- 
-
-
-    //currentWeapon.setFlipX(data.weaponFlipX);
-    //console.log(`id: ${currentWeapon.id} x: ${currentWeapon.x}, y: ${currentWeapon.y} rot: ${currentWeapon.rotation}`);
-  
-
-//});
- 
-    // В вашем коде на клиенте
 this.physics.add.overlap(player, this.weaponsGroup, (player, weapon) => {
-  if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E))) {
+  if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)) ) {
     // Отправить серверу запрос на подбор оружия
     onPickupWeapon(player, weapon);
     this.socket.emit("pickupWeapon", weapon.id);
   }
 });
 
-// В вашем коде на клиенте
+
 
   
 
@@ -373,21 +418,23 @@ function armed(weapon){
     weapon.y = player.y + pistolOffsetY;
    
     // Flip the player and the pistol based on the player's direction
+    
+  
     weapon.setFlipX(calculateFlipX(player, self.customCursor));
-  
-  
   
      // угол вращения оружия
      if (isFlipX) {
       weapon.setRotation(Math.PI + angleToCursor); // 180 градусов
       weapon.setOrigin(1, 0.5); //pivot в правую сторону
+      
     } else {
       weapon.setRotation(angleToCursor); // Нет вращения
       weapon.setOrigin(0, 0.5); // spivot в исходное положение
     }
- 
+    
    // Emit the "weaponUpdates" event to all clients
    self.socket.emit("weaponUpdates", {
+     chel: player,
      playerId: player.id,
      weaponId: weapon.id,
      playerX: player.x,
@@ -395,6 +442,10 @@ function armed(weapon){
      weaponX: weapon.x,
      weaponY: weapon.y,
      weaponRotation: weapon.rotation,
+     weaponFlipX: isFlipX,
+     angle: angleToCursor,
+     cursor: self.customCursor,
+  
      
 
    });
@@ -507,11 +558,24 @@ function shoot(playerWeapon) {
   bullet.setRotation(angleToCursor);
   bullet.setActive(true);
   bullet.setVisible(true);
-
+  bullets.push(bullet);
   // Установите таймер на удаление пули через 3 секунды
   self.time.delayedCall(1000, () => {
     bullet.destroy();
   });
+
+  self.socket.emit("bulletUpdates", {
+    bullet: bullet,
+    bulletSpeed: bulletSpeed,
+    velocity: bullet.body.velocity,
+    playerId: player.id,
+    weaponId: playerWeapon.id,
+    playerWeaponX: playerWeapon.x,
+    playerWeaponY: playerWeapon.y,
+    angle: angleToCursor,
+    
+  });
+
 }
   
 
@@ -532,20 +596,22 @@ function createWeapon(self, x, y, weaponId) {
 
 
 function onPickupWeapon(player, weapon) {
-  if (!player.weapon) {
+  if (!hasWeapon) {
     player.weapon = weapon;
     weapon.setDepth(2);
     weapon.x = player.x;
     weapon.y = player.y;
     weapon.isPickedUp = true;
     playerWeapons.push(weapon);
-    self.socket.emit("pickupWeapon", weapon.id, self.socket.id);
+    hasWeapon = true; // Установка флага наличия оружия
+   // self.socket.emit("pickupWeapon", weapon.id, self.socket.id);
   }
 }
 
 function addPlayer(self, playerInfo) {
   self.player = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
   self.player.play('idle');
+  
 }
 
 function addOtherPlayers(self, playerInfo) {
@@ -557,6 +623,7 @@ function addOtherPlayers(self, playerInfo) {
     otherPlayer.playerId = playerInfo.playerId;
     otherPlayer.setOrigin(0, 0); 
     otherPlayer.setDepth(0); // Установите origin для нового игрока
+
     self.otherPlayers.add(otherPlayer);
   }
 }
