@@ -1,7 +1,7 @@
 var config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 1920,
+  height: 1080,
   physics: {
     default: 'arcade',
     arcade: {
@@ -34,13 +34,12 @@ function Correctness()
 }
 
 Correctness();
-// == 
 
 let player;
 let hasWeapon = false;
-//let weapon = null;
 let customCursor;
 let isMoving = false;
+let isShooting = false;
 let isFlipX = false;
 let idleAnim;
 let moveAnim;
@@ -55,7 +54,9 @@ let maxBulletDistance = 1000; // Максимальное расстояние, 
 let playerWeaponId = null; 
 let playerWeapon = null;
 let playerWeapons = []; // Создайте массив для хранения оружи
-
+let worldEmbiendSound;
+let pistolTakeSound;
+let pistolShootSound;
 
 function preload() {
   this.load.spritesheet('playerIdle', 'assets/player/idle.png', { frameWidth: 40, frameHeight: 40 });
@@ -65,7 +66,9 @@ function preload() {
   this.load.image('pistolImage', 'assets/weapone/pistol/pistol.png');
   this.load.image('bullet', 'assets/weapone/bullet.png');
   this.load.image('customCursor', 'assets/aim.png');
-
+  this.load.audio("pistolTakeSound", ["assets/sounds/takePistol.mp3", "assets/sounds/takePistol.ogg"]);
+  this.load.audio("pistolShootSound", ["assets/sounds/pistolShoot.mp3", "assets/sounds/pistolShoot.ogg"]);
+  this.load.audio("worldEmbiend", ["assets/sounds/world.mp3", "assets/sounds/world.ogg"]);
    
   
 }
@@ -84,8 +87,13 @@ function create() {
 
  
 
-  this.load.image('bullet', 'assets/weapone/bullet.png');
-
+  for (let i = 0; i < maxBullets; i++) {
+    const bullet = this.physics.add.image(0, 0, 'bullet');
+    bullet.setActive(false);
+    bullet.setVisible(false);
+    bullets.push(bullet);
+  }
+  //this.physics.add.collider(player, bullets, this.bulletPlayerCollision, null, this);
 
   document.body.style.cursor = 'none';
   this.customCursor = this.add.sprite(800, 700, 'customCursor');
@@ -156,11 +164,13 @@ function create() {
     repeat: 0,
   });
 
- 
-  
-  
-      
+  worldEmbiendSound = this.sound.add('worldEmbiend');
+  pistolTakeSound = this.sound.add('pistolTakeSound');
+  pistolShootSound = this.sound.add('pistolShootSound');
 
+  worldEmbiendSound.play();
+  
+  
   
 
   this.otherPlayers = this.add.group();
@@ -278,14 +288,20 @@ this.socket.on('weaponUpdate', function (weaponData) {
           playerWeapon.weaponY = weaponY;
           playerWeapon.setFlipX(calculateFlipX(weaponData.chel, weaponData.cursor));
           playerWeapon.setPosition(weaponX, weaponY);
-          console.log("suka");
-          // угол вращения оружия
+          
           if (weaponData.weaponFlipX) {
             playerWeapon.setRotation(Math.PI + weaponData.angle);
             playerWeapon.setOrigin(1, 0.5);
           } else {
             playerWeapon.setRotation(weaponData.angle);
             playerWeapon.setOrigin(0, 0.5);
+          }
+
+          if(weaponData.animationKey === "pistol_shoot"){
+            playerWeapon.play('pistol_shoot', true);
+          }
+          else{
+            playerWeapon.play('pistol_idle', true);
           }
         }
       }
@@ -308,10 +324,18 @@ this.socket.on('bulletUpdate', function (bulletData) {
     bullet.setActive(true);
     bullet.setVisible(true);
 
-  // Установите таймер на удаление пули через 3 секунды
-     self.time.delayedCall(1000, () => {
-      bullet.destroy();
-      });
+    bullets.forEach((bullet) => {
+      if (bullet.active) {
+        // Проверьте условие, при котором пуля завершает свой полет
+        if (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600) {
+          bullet.setActive(false);
+          bullet.setVisible(false);
+          // Верните пулю в начальное положение
+          bullet.setPosition(0, 0);
+        }
+      }
+  
+    });
 
     }
    
@@ -357,18 +381,18 @@ function update() {
   const targetY = self.customCursor.y;
 
 // Задаем плавное перемещение камеры к прицелу
-const cameraSpeed = 0.1;
-const camX = this.cameras.main.scrollX;
-const camY = this.cameras.main.scrollY;
-const newCamX = camX + (targetX - game.config.width / 2 - camX) * cameraSpeed;
-const newCamY = camY + (targetY - game.config.height / 2 - camY) * cameraSpeed;
+  const cameraSpeed = 0.1;
+  const camX = this.cameras.main.scrollX;
+  const camY = this.cameras.main.scrollY;
+  const newCamX = camX + (targetX - game.config.width / 2 - camX) * cameraSpeed;
+  const newCamY = camY + (targetY - game.config.height / 2 - camY) * cameraSpeed;
 
 // Устанавливаем новую позицию камеры
-this.cameras.main.scrollX = newCamX;
-this.cameras.main.scrollY = newCamY;
+  this.cameras.main.scrollX = newCamX;
+  this.cameras.main.scrollY = newCamY;
 
 
-
+   
 
     // Constrain position of reticle
   constrainReticle(this.customCursor, 400);
@@ -383,19 +407,42 @@ this.cameras.main.scrollY = newCamY;
 
     armed(playerWeapon);
     this.input.on('pointerdown', function (pointer) {
-      if (pointer.leftButtonDown() && playerWeapons.length > 0) {
-        // Запускаем анимацию стрельбы
-        playerWeapon.play('pistol_shoot', true);
-        // Вызываем метод shoot
+      if (pointer.leftButtonDown() && playerWeapons.length > 0 && bullets.filter(bullet => bullet.active).length < maxBullets) {
+        isShooting = true;
         shoot(playerWeapon);
-      } else if (!pointer.leftButtonDown()) {
-        // Воспроизводим анимацию пистолета в руке игрока в состоянии покоя
-        playerWeapon.play('pistol_idle', true);
-      }
-
-    
+      } 
     });
 
+    this.input.on('pointerup', function (pointer) {
+      if (isShooting) {
+        
+        self.time.delayedCall(200, () => {
+          isShooting = false;
+          //playerWeapon.anims.stop('pistol_shoot');
+          //playerWeapon.play('pistol_idle', true);
+        });
+      }
+       // Считаем количество активных пуль
+  const activeBullets = bullets.filter(bullet => bullet.active).length;
+
+  // Выводим количество активных и неактивных пуль в консоли
+console.log(`Active Bullets: ${activeBullets}/${maxBullets}`);
+    });
+    // Проверьте, столкнулась ли пуля с чем-либо и обработайте столкновение
+
+  // При завершении выстрела, верните пулю обратно в пул
+  bullets.forEach((bullet) => {
+    if (bullet.active) {
+      // Проверьте условие, при котором пуля завершает свой полет
+      if (bullet.x < 0 || bullet.x > 1920 || bullet.y < 0 || bullet.y > 1080) {
+        bullet.setActive(false);
+        bullet.setVisible(false);
+        // Верните пулю в начальное положение
+        bullet.setPosition(0, 0);
+      }
+    }
+  });
+   
   }
 
   
@@ -409,11 +456,10 @@ this.cameras.main.scrollY = newCamY;
 function armed(weapon){
   weapon = playerWeapons[0];
     const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
-
     const pistolOffsetX = isFlipX ? 10 : 30; // Смещение пистолета в зависимости от отзеркаливания
     const pistolOffsetY = 15; // Смещение пистолета относительно персонажа по вертикали
-  
-    
+    let animationKey = isShooting ? 'pistol_shoot' : 'pistol_idle'; // Определение текущей анимации
+
     weapon.x = player.x + pistolOffsetX;
     weapon.y = player.y + pistolOffsetY;
    
@@ -421,7 +467,7 @@ function armed(weapon){
     
   
     weapon.setFlipX(calculateFlipX(player, self.customCursor));
-  
+   
      // угол вращения оружия
      if (isFlipX) {
       weapon.setRotation(Math.PI + angleToCursor); // 180 градусов
@@ -431,6 +477,13 @@ function armed(weapon){
       weapon.setRotation(angleToCursor); // Нет вращения
       weapon.setOrigin(0, 0.5); // spivot в исходное положение
     }
+
+    if (isShooting) {
+      weapon.play('pistol_shoot', true);
+    } else {
+      weapon.play('pistol_idle', true);
+    }
+     
     
    // Emit the "weaponUpdates" event to all clients
    self.socket.emit("weaponUpdates", {
@@ -445,7 +498,7 @@ function armed(weapon){
      weaponFlipX: isFlipX,
      angle: angleToCursor,
      cursor: self.customCursor,
-  
+     animationKey: animationKey,
      
 
    });
@@ -547,27 +600,55 @@ function calculateFlipX(obj, cursor) {
 }
 
 function shoot(playerWeapon) {
-  // Calculate the angle between the player and the cursor
+ 
   const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
-
-  // Создаем пулю
-  const bullet = self.physics.add.image(playerWeapon.x, playerWeapon.y, 'bullet');
+  const bullet = bullets.find(bullet => !bullet.active); // Найдите первую неактивную пулю
   const bulletSpeed = 2000;
-  self.physics.velocityFromRotation(angleToCursor, bulletSpeed, bullet.body.velocity);
+  if (bullet) {
+    self.physics.velocityFromRotation(angleToCursor, bulletSpeed, bullet.body.velocity);
+    bullet.setRotation(angleToCursor);
+    bullet.setActive(true);
+    bullet.setVisible(true);
+    bullet.setPosition(playerWeapon.x, playerWeapon.y );
+    //shotSound.play();
 
-  bullet.setRotation(angleToCursor);
-  bullet.setActive(true);
-  bullet.setVisible(true);
-  bullets.push(bullet);
+   // Рассчитайте расстояние между источником звука и игроком
+const distance = Phaser.Math.Distance.Between(
+  bullet.x,
+  bullet.y,
+  player.x,
+  player.y
+);
+
+// Определите максимальное расстояние, на котором игроки услышат звук
+const maxHearingDistance = 500; // Замените на нужное значение
+
+// Устанавливайте уровень громкости в зависимости от расстояния
+let volume = 1.0; // Максимальная громкость
+
+if (distance > maxHearingDistance) {
+  // Игрок находится за пределами радиуса слышимости
+  volume = 0.0; // Звук не слышен
+} else {
+  // Рассчитайте уровень громкости в зависимости от расстояния
+  volume = 1.0 - distance / maxHearingDistance;
+}
+
+// Установите уровень громкости звука
+ //pistolShootSound.setVolume(volume);
+
+// Если игрок находится в радиусе слышимости, воспроизведите звук
+if (distance <= maxHearingDistance) {
+  // Воспроизвести звук для конкретного игрока
+  pistolShootSound.play();
+}
   // Установите таймер на удаление пули через 3 секунды
-  self.time.delayedCall(1000, () => {
-    bullet.destroy();
-  });
+  }
 
   self.socket.emit("bulletUpdates", {
     bullet: bullet,
     bulletSpeed: bulletSpeed,
-    velocity: bullet.body.velocity,
+    //velocity: bullet.body.velocity,
     playerId: player.id,
     weaponId: playerWeapon.id,
     playerWeaponX: playerWeapon.x,
@@ -576,8 +657,18 @@ function shoot(playerWeapon) {
     
   });
 
-}
+ 
   
+
+}
+function bulletPlayerCollision(player, bullet) {
+  bullet.setActive(false);
+  bullet.setVisible(false);
+  bullet.setPosition(0, 0);
+
+  // Добавьте дополнную обработку столкновения, например, уменьшение здоровья игрока
+  // player.health -= damage; // Это пример, вы можете настроить под свои нужды
+}
 
 
 
