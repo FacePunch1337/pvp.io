@@ -89,6 +89,18 @@
         io.emit("weaponPickedUp", weaponId, socket.id);
       }
     });
+
+    socket.on("dropWeapons", (weaponId, playerId) => {
+      
+      playerId = socket.id;
+      console.log(`Игрок ${playerId} отпустил оружие с ID ${weaponId}`);
+      
+      const weapon = weapons.find((w) => w.id === weaponId);
+      if (weapon) {
+        weapon.isPickedUp = false;
+        io.emit("weaponDrop", weaponId, socket.id);
+      }
+    });
     
 
     socket.on("weaponUpdates", (weaponData) => {
