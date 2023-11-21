@@ -275,7 +275,7 @@ export function startGame() {
             addPlayer(self, players[id]);
           }
         } else {
-          io.of(self.roomId).emit("currentPlayers", players);
+          addOtherPlayers(self, players[id]);
         }
       });
     });
@@ -1163,7 +1163,7 @@ export function startGame() {
       otherPlayer.playerId = playerInfo.playerId;
       otherPlayer.setOrigin(0, 0);
       otherPlayer.setDepth(0); // Установите origin для нового игрока
-
+      io.of(self.roomId).emit("currentPlayers", players);
       self.otherPlayers.add(otherPlayer);
       //console.log(playerInfo.nickname);
     }
