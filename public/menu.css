@@ -18,6 +18,7 @@ a {
 .menu {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   height: 100vh;
@@ -26,12 +27,14 @@ a {
 
 .r-menu {
   display: flex;
-  flex-direction: rows;
+
+  flex-direction: row;
+  height: 60px;
 }
 
 .r-input {
   width: 250px;
-  height: 50px;
+  height: 25px;
   border: 1px solid #000000;
   border-radius: 5px;
   background: #ffffff;
@@ -47,14 +50,14 @@ a {
 .r-btn {
   font-family: "8BIT WONDER", sans-serif;
 
-  width: 200px;
-  height: 50px;
+  width: 250px;
+  height: 25px;
 
   border: 1px solid #000000;
   border-radius: 5px;
 
   background: black;
-  font-size: 20px;
+  font-size: 15px;
   color: white;
   text-align: center;
   margin: 10px;
@@ -222,10 +225,31 @@ a {
   cursor: default;
 }
 
+.rooms-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: default;
+}
+
 .open-settings {
   color: white;
   border-radius: 25%;
   padding: 5px 10px;
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.open-rooms {
+  color: white;
+  border-radius: 25%;
+  padding: 1px;
   cursor: pointer;
   border: none;
   padding: 5px 10px;
@@ -242,7 +266,13 @@ a {
 .settings-box {
   display: none;
   flex-direction: column;
-  width: 150px;
+  width: 350px;
+}
+
+.rooms-box {
+  display: none;
+  flex-direction: row;
+  width: 350px;
 }
 
 .save-btn {
@@ -259,6 +289,13 @@ a {
 }
 
 .settings-content {
+  padding: 5px;
+  font-size: 10px;
+  font-family: "8BIT WONDER", sans-serif;
+  max-height: 200px;
+}
+
+.rooms-content {
   padding: 5px;
   font-size: 10px;
   font-family: "8BIT WONDER", sans-serif;

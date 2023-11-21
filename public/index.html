@@ -51,11 +51,13 @@
             required
             class="menu-input"
           />
+
           <select id="select" class="select-menu">
             <option value="1"></option>
             <option value="2"></option>
           </select>
         </div>
+
         <span class="error-input" id="error-input"></span>
         <button id="save-gamer-session" type="button" class="menu-btn">
           Join
@@ -63,7 +65,26 @@
         <br />
         <br />
         <!-- Rooms. -->
-        <div class="r-menu">
+        <div class="rooms-container">
+          <button id="toggle-rooms" class="open-rooms">
+            <img src="./assets/add.png" alt="Rooms" />
+          </button>
+          <div class="rooms-box" id="rooms-box">
+            <div class="rooms-content">
+              <input
+                id="input-room"
+                type="text"
+                placeholder="Enter room name"
+                required
+                class="r-input"
+              />
+              <button id="create-room" type="button" class="r-btn">
+                Create room
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- <div class="r-menu">
           <input
             id="input-room"
             type="text"
@@ -75,6 +96,7 @@
             Create room
           </button>
         </div>
+      </div> -->
       </div>
       <!-- Chat -->
       <div class="chat-container">

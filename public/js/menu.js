@@ -60,6 +60,8 @@ function toggleChat() {
   chatBox.style.display = chatBox.style.display === "none" ? "block" : "none";
 }
 
+
+
 function sendMessage() {
   var nickname = document.getElementById("input").value;
   var message_input = document.getElementById("message");
@@ -119,6 +121,11 @@ function ConstructMessage(is, message) {
 function toggleSettings() {
   var settings = document.getElementById("settings-box");
   settings.style.display = settings.style.display === "none" ? "block" : "none";
+}
+
+function toggleRooms() {
+  var rooms = document.getElementById("rooms-box");
+  rooms.style.display = rooms.style.display === "none" ? "block" : "none";
 }
 
 function SaveDataSeting() {
@@ -187,21 +194,24 @@ function ChatHistoryLimit(limit) {
 // { ============== }
 
 // { ======= Rooms container. ======= }
-function CreateRoom() 
-{
+function CreateRoom() {
   const room = document.getElementById("input-room").value;
   var nickname = document.getElementById("input").value;
   const error_element = document.getElementById("error-input");
 
-  if (InputValidityData(nickname)) 
-  {
+  if (!InputValidityData(nickname)) {
+    error_element.innerHTML = "Enter a valid nickname";
+    return;
+  }
+  if (room.trim() === "") {
+    alert("Enter a valid room name");
+    return;
+  } else {
+    socket.emit("createRoom", room);
     socket.emit("saveGamerSession", nickname);
 
-    socket.emit("createRoom", room);
     JoinRoom(room);
   }
-  else 
-    error_element.innerHTML = "Invalid input data";
 }
 
 socket.on("existingRooms", (data) => {
@@ -245,6 +255,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var save_seting = document.getElementById("save-data-seting");
   var join_button = document.getElementById("save-gamer-session");
   var toggle_chat = document.getElementById("toggle-chat");
+  var toggle_rooms = document.getElementById("toggle-rooms");
   var send_message = document.getElementById("send-message");
   var create_room = document.getElementById("create-room");
 
@@ -253,6 +264,8 @@ document.addEventListener("DOMContentLoaded", function () {
   chat_history.addEventListener("click", ChatHistory);
   save_seting.addEventListener("click", SaveDataSeting);
   toggle_chat.addEventListener("click", toggleChat);
+  toggle_rooms.addEventListener("click", toggleRooms);
+
   send_message.addEventListener("click", sendMessage);
   create_room.addEventListener("click", CreateRoom);
 });
