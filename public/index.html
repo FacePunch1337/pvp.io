@@ -5,91 +5,115 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="./menu.css" />
     <link href="https://fonts.cdnfonts.com/css/8bit-wonder" rel="stylesheet" />
-    <!-- <script
-      src="https://kit.fontawesome.com/a076d05399.js"
-      crossorigin="anonymous"
-    ></script> -->
     <title>Magica 🧙‍♂️</title>
   </head>
   <body>
-    <div class="menu">
-      <input
-        id="input"
-        type="text"
-        placeholder="Enter your nickname"
-        required
-        class="menu-input"
-      />
-      <span class="error-input" id="error-input"></span>
-      <button type="button" class="menu-btn" onclick="SaveGamerSession()">
-        Play
-      </button>
-    </div>
-
-    <!-- Chat -->
-
-    <div class="chat-container">
-      <button class="open-button" onclick="toggleChat()">Chat</button>
-      <div class="chat-box" id="chat-box">
-        <div class="chat-content">
-          <!-- Chat messages go here -->
-          <div class="message user-message">
-            <span class="user-nickname">You:</span>
-            <span class="message-text"
-              >This is a user message on the right.</span
-            >
-          </div>
-          <div class="message received-message">
-            <span class="user-nickname">John:</span>
-            <span class="message-text"
-              >This is a received message on the left.</span
-            >
-          </div>
-          <!-- Add more messages with appropriate classes as needed -->
-        </div>
-        <div class="chat-input">
-          <input
-            class="inpt"
-            type="text"
-            id="message"
-            placeholder="Type your message..."
-          />
-          <button onclick="sendMessage()">Send</button>
-        </div>
-      </div>
-    </div>
-    <!-- <div class="chat-container">
-      <button class="open-button" onclick="toggleChat()">Chat</button>
-
-      <div class="chat-box" id="chat-box">
-        <div class="chat-content">
-          <div class="message">
-            <div class="user-nickname">User 1:</div>
-            <div class="message-content">
-              This is a user message on the right.
+    <!--MENU CONTENT.-->
+    <div id="menu-layout">
+      <!-- Settings -->
+      <header>
+        <div class="settings-container">
+          <button id="toggle-settings" class="open-settings">
+            <img src="./assets/settings.png" alt="settings" />
+          </button>
+          <div class="settings-box" id="settings-box">
+            <div class="settings-content">
+              <p>
+                Chat history
+                <input type="checkbox" id="chat-history-checkbox" />
+              </p>
+              <div id="chathistory" class="chathistory">
+                <p class="">
+                  History
+                  <input
+                    id="historychat-number-setting"
+                    class="historynum"
+                    type="number"
+                    min="1"
+                    max="100"
+                  />
+                </p>
+              </div>
+              <button id="save-data-seting" type="button" class="save-btn">
+                Save
+              </button>
             </div>
           </div>
-          <div class="message">
-            <div class="user-nickname">User 2:</div>
-            <div class="message-content">
-              This is a received message on the left.
-            </div>
-          </div>
-
         </div>
-
-        <div class="chat-input">
+      </header>
+      <!-- Main -->
+      <div class="menu">
+        <div>
           <input
-            class="inpt"
+            id="input"
             type="text"
-            id="message"
-            placeholder="Type your message..."
+            placeholder="Enter your nickname"
+            required
+            class="menu-input"
           />
-          <button onclick="sendMessage()">Send</button>
+          <select id="select" class="select-menu">
+            <option value="1"></option>
+            <option value="2"></option>
+          </select>
+        </div>
+        <span class="error-input" id="error-input"></span>
+        <button id="save-gamer-session" type="button" class="menu-btn">
+          Join
+        </button>
+        <br />
+        <br />
+        <!-- Rooms. -->
+        <div class="r-menu">
+          <input
+            id="input-room"
+            type="text"
+            placeholder="Enter room name"
+            required
+            class="r-input"
+          />
+          <button id="create-room" type="button" class="r-btn">
+            Create room
+          </button>
         </div>
       </div>
-    </div> -->
+      <!-- Chat -->
+      <div class="chat-container">
+        <button id="toggle-chat" class="open-button">
+          <img src="./assets/chat.png" alt="Chat" />
+        </button>
+        <div class="chat-box" id="chat-box">
+          <div class="chat-content">
+            <div class="user-message" id="user"></div>
+            <div class="received-message"></div>
+          </div>
+          <div class="chat-input">
+            <input
+              class="inpt"
+              type="text"
+              id="message"
+              placeholder="Type your message..."
+            />
+            <button id="send-message" class="btn-send">Send</button>
+          </div>
+        </div>
+      </div>
+      <script src="/socket.io/socket.io.js"></script>
+      <script type="module" src="./js/socketModule.js"></script>
+      <script type="module" src="./js/menu.js"></script>
+      <script type="module" src="./js/room.js"></script>
+    </div>
+
+    <!--GAME CONTENT.-->
+    <div id="game-layout" class="hidden-elements">
+      <style>
+        body {
+          padding: 0px;
+          margin: 0px;
+          background: #ffffff;
+        }
+      </style>
+      <script src="//cdn.jsdelivr.net/npm/phaser@3.3.0/dist/phaser.min.js"></script>
+      <script type="module" src="js/game.js"></script>
+    </div>
   </body>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="./js/menu.js"></script>
 </html>

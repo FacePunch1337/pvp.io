@@ -5,16 +5,76 @@ body {
   background: #ffffff;
 }
 
-a-btn {
+a {
   text-decoration: none;
   cursor: pointer;
 }
+
+/*Displaying different layouts.*/
+.hidden-elements {
+  display: none;
+}
+
 .menu {
   display: flex;
   flex-direction: column;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   height: 100vh;
+  cursor: default;
+}
+
+.r-menu {
+  display: flex;
+
+  flex-direction: row;
+  height: 60px;
+}
+
+.r-input {
+  width: 250px;
+  height: 25px;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  background: #ffffff;
+  font-size: 15px;
+
+  color: #000000;
+  text-align: center;
+
+  margin: 10px;
+  font-family: "8BIT WONDER", sans-serif;
+}
+
+.r-btn {
+  font-family: "8BIT WONDER", sans-serif;
+
+  width: 250px;
+  height: 25px;
+
+  border: 1px solid #000000;
+  border-radius: 5px;
+
+  background: black;
+  font-size: 15px;
+  color: white;
+  text-align: center;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.select-menu {
+  width: 150px;
+  height: 54px;
+  border: 1px solid #000000;
+  border-radius: 5px;
+  background-color: black;
+  font-size: 15px;
+  color: #ffffff;
+  text-align: center;
+  margin: 10px;
+  font-family: "8BIT WONDER", sans-serif;
 }
 
 .menu-input {
@@ -66,17 +126,21 @@ a-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #f0f0f0;
-
+  background-color: white;
+  border: 1px solid #ccc;
+  cursor: default;
   border-radius: 5px;
 }
 
 .open-button {
-  background-color: black;
   color: white;
   border-radius: 25%;
-  padding: 10px 15px;
+  padding: 5px 10px;
   cursor: pointer;
+  border: none;
+
+  padding: 5px 10px;
+  background-color: white;
 }
 
 .chat-box {
@@ -101,19 +165,24 @@ a-btn {
 .inpt {
   flex: 1;
   padding: 5px;
+  font-family: "8BIT WONDER", sans-serif;
+  border-radius: 25px;
 }
 
-button {
-  background-color: #008cba;
-  color: white;
+.btn-send {
   border: none;
   padding: 5px 10px;
+  background-color: #000000;
+  border-radius: 25px;
+  color: white;
+  font-family: "8BIT WONDER", sans-serif;
   cursor: pointer;
 }
 
 .user-nickname {
   font-weight: bold;
   margin-right: 5px;
+  font-family: "8BIT WONDER", sans-serif;
 }
 
 .message {
@@ -123,6 +192,8 @@ button {
 }
 
 .user-message {
+  font-family: "8BIT WONDER", sans-serif;
+  font-size: 10px;
   align-self: flex-end;
   background-color: #008cba;
   color: white;
@@ -132,6 +203,8 @@ button {
 }
 
 .received-message {
+  font-family: "8BIT WONDER", sans-serif;
+  font-size: 10px;
   align-self: flex-start;
   background-color: #f0f0f0;
   border: 1px solid #ccc;
@@ -140,4 +213,131 @@ button {
   margin: 5px;
 }
 
-/* Add styles for the chat container, chat input, etc. as needed */
+/* Settings */
+
+.settings-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: default;
+}
+
+.rooms-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  cursor: default;
+}
+
+.open-settings {
+  color: white;
+  border-radius: 25%;
+  padding: 5px 10px;
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.open-rooms {
+  color: white;
+  border-radius: 25%;
+  padding: 1px;
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px;
+  background-color: white;
+  cursor: pointer;
+}
+
+.historynum {
+  font-family: "8BIT WONDER", sans-serif;
+  font-size: 10px;
+  text-align: center;
+}
+
+.settings-box {
+  display: none;
+  flex-direction: column;
+  width: 350px;
+}
+
+.rooms-box {
+  display: none;
+  flex-direction: row;
+  width: 350px;
+}
+
+.save-btn {
+  padding: 5px 10px;
+  background-color: #000000;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-family: "8BIT WONDER", sans-serif;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  margin-left: 35px;
+}
+
+.settings-content {
+  padding: 5px;
+  font-size: 10px;
+  font-family: "8BIT WONDER", sans-serif;
+  max-height: 200px;
+}
+
+.rooms-content {
+  padding: 5px;
+  font-size: 10px;
+  font-family: "8BIT WONDER", sans-serif;
+  max-height: 200px;
+}
+
+.settings-content p {
+  text-align: center;
+}
+
+.chathistory {
+  display: none;
+}
+
+/* 404 */
+
+.nf-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+.nf-name {
+  font-size: 50px;
+  font-weight: bold;
+  color: #000000;
+  font-family: "8BIT WONDER", sans-serif;
+}
+.nf-btn {
+  font-family: "8BIT WONDER", sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #000000;
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.nf-btn:hover {
+  background-color: #000000;
+  color: #ffffff;
+}
