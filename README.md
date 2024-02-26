@@ -1,4 +1,4 @@
-# pvp.io
+# pvp.io ⚔️
 
 <p align="lefft">
     <img src="https://github.com/FacePunch1337/pvp.io/blob/main/pvp.gif"/>
