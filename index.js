@@ -17,13 +17,10 @@ const weaponSpawnInterval = 5000;
 
 app.use(express.static(path.join(__dirname, "public")));
 app.use(compression());
-
-app.get("/", (req, res) => 
-{
-  res.setHeader("Content-Encoding", "gzip");
-  res.sendFile(__dirname + "/index.html", { method: "GET", headers: { "Content-Type": "text/html" },})
-    .pipe(zlib.createGzip());
+app.get('/', (req,res) =>{
+  res.send('Server is running')
 });
+
 
 app.get("/ban", (req, res) => { res.sendFile(path.join(__dirname, "public", "BAN.html")); });
 
