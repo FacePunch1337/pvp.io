@@ -608,6 +608,7 @@ this.socket.on('playerMoved', function (playerInfo) {
    
     if (Phaser.Input.Keyboard.JustDown(this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q)) ) {
       dropWeapon(player, playerWeapon);
+      //throwWeapon(player, playerWeapon, targetX, targetY)
       this.socket.emit("dropWeapon", playerWeapon);
     }
 
@@ -1136,7 +1137,7 @@ function death(){
         playerWeapons.splice(weaponIndex, 1);
       }
     
-      weapon.play("pistol_idle", true);
+     
       weapon.setDepth(0);
       weapon.isPickedUp = false;
       player.weapon = null;
@@ -1165,7 +1166,7 @@ function death(){
          weapon.setVelocity(0);
          weapon.setBounce(0);
          weapon.isInFlight = false; 
-         self.physics.world.removeCollider(weapon.body.collider); 
+        self.physics.world.removeCollider(weapon.body.collider); 
      });
    
    
