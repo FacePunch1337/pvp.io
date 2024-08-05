@@ -1,4 +1,3 @@
-
 const express = require("express");
 const app = express();
 const server = require("http").Server(app);
@@ -102,8 +101,7 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("syncSound", sound);
   });
   
-
-
+ 
 
  
 
@@ -166,7 +164,7 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => 
   {
     console.log("::USER DISCONNECTED: ", socket.id);
-    //delete players[socket.id];
+    delete players[socket.id];
     io.emit("disconnect", socket.id);
   });
 });
@@ -191,4 +189,4 @@ setTimeout(() => { startGame(); }, 1000);
 
 app.use((req, res) => { res.status(404).sendFile(path.join(__dirname, "public", "404.html")); });
 
-server.listen(8081, () => { startGame(); console.log(`Server is spinning: -> 👽 http://localhost:8081/`); });
+server.listen(8081, () => { console.log(`Server is spinning: -> 👽 http://localhost:8081/`); });
