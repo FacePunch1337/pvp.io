@@ -20,7 +20,7 @@
         font-family: '8bit-wonder', sans-serif;
         font-size: 24px;
         padding: 10px 20px;
-        background-color: #ffcc00;
+        background-color: #ffffff;
         border: 2px solid #000;
         border-radius: 5px;
         cursor: pointer;
@@ -35,17 +35,15 @@
     </style>
 </head>
 <body>
-    <button class="start-button" id="start-button">Start</button>
+    <button class="start-button" id="start-button">START</button>
 
-    <!-- GAME CONTENT -->
+    
     <div id="game-layout" class="hidden-elements">
         <script src="//cdn.jsdelivr.net/npm/phaser@3.3.0/dist/phaser.min.js"></script>
         <script src="/socket.io/socket.io.js"></script>
         <script type="module" src="./js/game.js"></script>
         <script type="module">
-            import { startGame } from './js/game.js';
-            
-            // Make startGame available globally
+            import { startGame } from './js/game.js';     
             window.startGame = startGame;
 
             document.getElementById('start-button').addEventListener('click', () => {

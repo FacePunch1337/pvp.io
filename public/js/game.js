@@ -58,7 +58,6 @@ export function startGame()
   let pistolShootSound;
   let emptySound;
   let catchSound;
-  let duckSound;
   let canShoot = true;
   let wallsLayer;
   let camera;
@@ -82,7 +81,6 @@ export function startGame()
     this.load.audio("pistolShootSound", ["assets/sounds/pistolShoot.mp3", "assets/sounds/pistolShoot.ogg"]);
     this.load.audio("emptySound", ["assets/sounds/empty.mp3", "assets/sounds/empty.ogg"]);
     this.load.audio("catchSound", ["assets/sounds/catch.mp3", "assets/sounds/catch.ogg"]);
-    this.load.audio("duckSound", ["assets/sounds/duck.mp3", "assets/sounds/duck.ogg"]);
     this.load.audio("worldEmbiend", ["assets/sounds/world.mp3", "assets/sounds/world.ogg"]);
     
   }
@@ -207,7 +205,6 @@ export function startGame()
     pistolShootSound = this.sound.add('pistolShootSound');
     emptySound = this.sound.add('emptySound');
     catchSound = this.sound.add("catchSound");
-    duckSound = this.sound.add("duckSound");
     worldEmbiendSound.play();
     
 
@@ -360,18 +357,12 @@ this.socket.on('playerMoved', function (playerInfo) {
         switch (weaponType) {
           case "pistol":
             isPistol = true;
-            isMelee = false;
-            isTrap = false;
             break;
             case "melee":
             isMelee = true;
-            isPistol = false;
-            isTrap = false;
             break;
             case "trap":
             isTrap = true;
-            isMelee = true;
-            isPistol = false;
             break;
           default:
             break;
@@ -611,13 +602,7 @@ this.socket.on('playerMoved', function (playerInfo) {
         };
         this.socket.emit("syncSounds", sound);
       }
-      else if((weapon.weaponSubType === "duck")){
-        duckSound.play();
-        const sound = {
-          isDuck: true
-        };
-        this.socket.emit("syncSounds", sound);
-      }
+      
     });
   
    
@@ -648,7 +633,24 @@ this.socket.on('playerMoved', function (playerInfo) {
   }
 
  
+ function addPlayer(self, playerInfo) {
+    self.player = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
+    self.player.play('idle');
+    
+  }
 
+  function addOtherPlayers(self, playerInfo) {
+    // Проверка, не существует ли игрок с таким playerId уже в группе
+    const existingPlayer = self.otherPlayers.getChildren().find((player) => player.playerId === playerInfo.playerId);
+    if (!existingPlayer) {
+      const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
+      otherPlayer.playerId = playerInfo.playerId;
+      otherPlayer.setOrigin(0, 0); 
+      otherPlayer.setDepth(0); 
+
+      self.otherPlayers.add(otherPlayer);
+    }
+  }
   
   function armed(weapon){
     const angleToCursor = Phaser.Math.Angle.Between(player.x, player.y, self.customCursor.x, self.customCursor.y);
@@ -1048,12 +1050,9 @@ function death(){
      weapon = self.physics.add.image(x,y,'bat');
    }
    else if(weaponType === "trap"){
-    const randomValue = Math.random();
-
-    const subType = randomValue < 0.5 ? "bearTrap" : "duck";
-    weapon = self.physics.add.image(x, y, subType).setSize(1,1);
-
-    weapon.weaponSubType = subType;
+    weapon = self.physics.add.image(x, y, 'bearTrap').setSize(1,1);
+    weapon.weaponSubType = "bearTrap"
+   
    
   }
     weapon.setDepth(0);
@@ -1174,24 +1173,7 @@ function death(){
  
   }
 
-  function addPlayer(self, playerInfo) {
-    self.player = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
-    self.player.play('idle');
-    
-  }
-
-  function addOtherPlayers(self, playerInfo) {
-    // Проверка, не существует ли игрок с таким playerId уже в группе
-    const existingPlayer = self.otherPlayers.getChildren().find((player) => player.playerId === playerInfo.playerId);
-    if (!existingPlayer) {
-      const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'playerIdle');
-      otherPlayer.playerId = playerInfo.playerId;
-      otherPlayer.setOrigin(0, 0); 
-      otherPlayer.setDepth(0); 
-
-      self.otherPlayers.add(otherPlayer);
-    }
-  }
+ 
 
   
 }
