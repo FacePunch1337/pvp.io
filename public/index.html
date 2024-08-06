@@ -13,12 +13,13 @@
         margin: 0px;
         background: #ffffff;
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         height: 100vh;
+        font-family: '8bit-wonder', sans-serif;
       }
       .start-button {
-        font-family: '8bit-wonder', sans-serif;
         font-size: 24px;
         padding: 10px 20px;
         background-color: #ffffff;
@@ -30,6 +31,28 @@
       .start-button:hover {
         transform: scale(1.1);
       }
+      .instructions-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 24px;
+        margin-top: 20px;
+      }
+      .instructions {
+        width: 250px; 
+        text-align: center;
+      }
+      .instruction-item {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+        width: 100%; 
+        box-sizing: border-box; 
+      }
+      .instruction-item img {
+        margin-right: 10px;
+      }
       .hidden-elements {
         display: none;
       }
@@ -37,6 +60,23 @@
 </head>
 <body>
     <button class="start-button" id="start-button">START</button>
+
+    <div class="instructions-container">
+      <div class="instructions">
+        <div class="instruction-item">
+          <img src="./images/E.png" alt="Take" width="25" height="25" />
+          <span>Take</span>
+        </div>
+        <div class="instruction-item">
+          <img src="./images/Q.png" alt="Drop" width="25" height="25" />
+          <span>Drop</span>
+        </div>
+        <div class="instruction-item">
+          <img src="./images/LMB.png" alt="Shoot" width="25" height="25" />
+          <span>Shoot</span>
+        </div>
+      </div>
+    </div>
 
     <div id="game-layout" class="hidden-elements">
         <script src="//cdn.jsdelivr.net/npm/phaser@3.3.0/dist/phaser.min.js"></script>
@@ -49,7 +89,8 @@
             document.getElementById('start-button').addEventListener('click', () => {
                 startGame();
                 document.getElementById('game-layout').classList.remove('hidden-elements');
-                document.querySelector('button').style.display = 'none';
+                document.querySelector('.start-button').style.display = 'none';
+                document.querySelector('.instructions-container').style.display = 'none';
             });
         </script>
     </div>

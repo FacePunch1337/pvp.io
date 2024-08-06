@@ -898,7 +898,6 @@ function oops(){
   player.setBounce(0);
   
 
-  //spawnPlayer();
 
   
   
